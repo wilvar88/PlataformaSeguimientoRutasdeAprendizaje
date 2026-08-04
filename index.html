@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Capacitación y Mallas</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Librería SheetJS para exportación nativa de archivos Excel .xlsx -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Librería Chart.js para tableros interactivos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Orbe decorativo -->
+    <div class="bg-orb"></div>
+
+    <!-- 1. VISTA DE LOGIN -->
+    <div id="login-view" class="active">
+        <div class="login-box">
+            <h2>Acceso a Capacitación</h2>
+            <p class="login-subtitle">Ingresa tu documento para ver tus rutas de aprendizaje</p>
+            <div class="input-group">
+                <label for="doc-input">Número de Documento</label>
+                <input type="text" id="doc-input" placeholder="Ej: 12345678" onkeypress="handleEnter(event)">
+            </div>
+            <div id="login-loader" class="loader"></div>
+            <div id="login-error" class="error-msg"></div>
+            <button class="btn-primary" onclick="iniciarSesion()">Ingresar</button>
+        </div>
+    </div>
+
+    <!-- 2. VISTA PRINCIPAL DE LA APP -->
+    <div id="app-view">
+        <!-- HEADER GLOBAL -->
+        <header class="header">
+            <div class="header-left">
+                <div class="header-custom-logo">
+                    <img src="img/logo.png" alt="Logo" class="app-custom-logo" onerror="this.style.display='none'">
+                </div>
+                <div class="header-logo">
+                    MI <span>CAPACITACIÓN</span>
+                </div>
+            </div>
+
+            <!-- BARRA DE NAVEGACIÓN -->
+            <nav class="nav-tabs" id="main-nav">
+                <button class="nav-tab" id="tab-btn-vision-general" onclick="switchTab('vision-general')" style="display:none;">
+                    📊 Visión General
+                </button>
+                <button class="nav-tab" id="tab-btn-mis-rutas" onclick="switchTab('mis-rutas')">
+                    📌 Mis Rutas
+                </button>
+            </nav>
+
+            <div class="header-right">
+                <div class="header-user">
+                    <span id="user-name">Usuario</span>
+                    <span id="user-profile">Perfil</span>
+                    <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENEDOR DE DASHBOARDS -->
+        <main class="container">
+            <div id="app-loader" class="loader" style="width: 50px; height: 50px; border-width: 4px;"></div>
+            
+            <!-- Tab: Visión General (Admin) -->
+            <div id="tab-vision-general" class="tab-content">
+                <div class="admin-header-actions">
+                    <h1 class="page-title">Visión General - Administración</h1>
+                    <button class="btn-excel-export" onclick="descargarExcelAdmin()" title="Descargar informe de áreas en Excel">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Descargar Excel
+                    </button>
+                </div>
+                <div id="admin-content"></div>
+            </div>
+
+            <!-- Tab: Mis Rutas (Personales) -->
+            <div id="tab-mis-rutas" class="tab-content">
+                <h1 class="page-title">Mi Avance Personal</h1>
+                <div id="student-content"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 3. MODAL / POPUP DE DETALLE DE COLABORADORES POR CURSO -->
+    <div id="modal-curso" class="modal-overlay" onclick="cerrarModalAfuera(event)">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <span class="modal-badge-ruta" id="modal-ruta-nombre">Ruta</span>
+                    <h2 class="modal-title" id="modal-curso-nombre">Nombre del Curso</h2>
+                </div>
+                <button class="btn-modal-close" onclick="cerrarModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Tarjetas resumen de estadísticas del curso -->
+                <div class="modal-stats-bar">
+                    <div class="modal-stat-box">
+                        <span class="modal-stat-num" id="modal-stat-total">0</span>
+                        <span class="modal-stat-lbl">Inscritos</span>
+                    </div>
+                    <div class="modal-stat-box">
+                        <span class="modal-stat-num text-verde" id="modal-stat-aprobados">0</span>
+                        <span class="modal-stat-lbl">Aprobados</span>
+                    </div>
+                    <div class="modal-stat-box">
+                        <span class="modal-stat-num text-naranja" id="modal-stat-encurso">0</span>
+                        <span class="modal-stat-lbl">En Curso</span>
+                    </div>
+                    <div class="modal-stat-box">
+                        <span class="modal-stat-num text-gris" id="modal-stat-inscritos">0</span>
+                        <span class="modal-stat-lbl">Sin Iniciar</span>
+                    </div>
+                    <div class="modal-stat-box">
+                        <span class="modal-stat-num text-rojo" id="modal-stat-reprobados">0</span>
+                        <span class="modal-stat-lbl">No Aprobados</span>
+                    </div>
+                </div>
+
+                <!-- Buscador de colaboradores dentro del modal -->
+                <div class="modal-search-box">
+                    <input type="text" id="modal-search-input" placeholder="🔍 Buscar colaborador o cédula..." onkeyup="filtrarPersonasModal()">
+                </div>
+
+                <!-- Listado de Colaboradores -->
+                <div class="modal-person-list" id="modal-person-list">
+                    <!-- Filas dinámicas -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. FOOTER DE DERECHOS RESERVADOS -->
+    <footer class="app-footer">
+        © Todos los derechos reservados - Wilson Varela
+    </footer>
+
+    <!-- 5. LÓGICA JAVASCRIPT -->
+    <script src="app.js"></script>
+</body>
+</html>
