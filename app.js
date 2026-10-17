@@ -167,7 +167,19 @@ function cargarDatos() {
 // =========================================================================
 function toggleAcordeon(id) {
     const el = document.getElementById(id);
-    el.classList.toggle('open');
+    if (!el) return;
+    const isOpen = el.classList.toggle('open');
+    
+    // Cambiar estado y texto/flecha del botón
+    const btn = el.previousElementSibling ? el.previousElementSibling.querySelector('.btn-toggle-detalle') : null;
+    if (btn) {
+        btn.classList.toggle('open', isOpen);
+        if (isOpen) {
+            btn.innerHTML = btn.innerHTML.replace('▼', '▲').replace('Ver ', 'Ocultar ');
+        } else {
+            btn.innerHTML = btn.innerHTML.replace('▲', '▼').replace('Ocultar ', 'Ver ');
+        }
+    }
 }
 
 function toggleDivisionSection(cleanDivKey) {
