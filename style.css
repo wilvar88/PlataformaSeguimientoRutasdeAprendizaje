@@ -650,6 +650,7 @@ body::after {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 24px;
+    align-items: start;
 }
 
 .glass-card {
@@ -803,17 +804,22 @@ body::after {
     background: rgba(205, 212, 0, 0.1);
     border-color: rgba(205, 212, 0, 0.3);
 }
+.btn-toggle-detalle.open {
+    background: rgba(205, 212, 0, 0.12);
+    border-color: var(--verde-limon);
+    color: #ffffff;
+}
 
 /* ---------- DESPLEGABLE DE CURSOS DE UNA RUTA ---------- */
 .cursos-detalle {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.4s ease-in-out;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     background: rgba(0, 0, 0, 0.25);
     border-top: 1px solid transparent;
 }
 .cursos-detalle.open {
-    max-height: 1200px;
+    max-height: 5000px;
     border-color: var(--glass-border);
     padding: 16px 20px;
 }
@@ -1151,4 +1157,3 @@ body::after {
 .btn-excel-export:hover svg {
     transform: translateY(2px);
 }
-
